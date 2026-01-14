@@ -1,9 +1,14 @@
-# xss-sqli-phishing-with-ML
-building an Intrusion Detection System (IDS) that detects:
--XSS attacks
--SQL Injection (SQLi)
--Phishing URLs
-Using Machine Learning.
+# IDS using Machine Learning
+
+Description
+  This project implements an Intrusion Detection System (IDS) that detects
+  XSS, SQL Injection, and Phishing attacks using Machine Learning.
+
+Features
+- ML-based detection
+- Supports XSS, SQLi, Phishing
+- Modular architecture
+- Alert logging
 
 Pipeline:
 Traffic / URL / Payload
