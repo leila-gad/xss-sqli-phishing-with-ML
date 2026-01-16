@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 import xgboost as xgb
@@ -6,53 +7,56 @@ import joblib
 import os
 
 def main():
-    # Read features
-    df = pd.read_csv("data/processed/features.csv")
-    df.rename(columns=lambda x: x.strip(), inplace=True)  # Remove extra spaces
-
-    # Check label column exists
-    if 'label' not in df.columns:
-        raise ValueError("Column 'label' not found in features.csv")
-
-    X = df.drop("label", axis=1)
+    # ---------------------------
+    # 1️⃣ Load Dataset
+    # ---------------------------
+    df = pd.read_csv("data/processed/full_dataset.csv")
+    X_text = df["payload"].astype(str)
     y = df["label"].astype(int)
 
     # Ensure labels start from 0
-    y = y - min(y)
+    y = y - y.min()
 
-    # Split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+    # ---------------------------
+    # 2️⃣ Fit TF-IDF Vectorizer
+    # ---------------------------
+    vectorizer = TfidfVectorizer(
+        ngram_range=(1, 3),
+        max_features=5000,  # fixed feature size
+        lowercase=True
     )
 
-    # Create models folder if it doesn't exist
-    os.makedirs("models", exist_ok=True)
+    X_features = vectorizer.fit_transform(X_text)
 
-    # XGBoost multi-class
+    # ---------------------------
+    # 3️⃣ Train/Test Split
+    # ---------------------------
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_features, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    # ---------------------------
+    # 4️⃣ Train XGBoost Multi-Class
+    # ---------------------------
     model = xgb.XGBClassifier(
         n_estimators=300,
         max_depth=6,
         learning_rate=0.1,
-        objective="multi:softmax",
+        objective="multi:softprob",  # allows confidence/probabilities
         num_class=len(y.unique()),
         eval_metric='mlogloss'
     )
 
-    # Train
     model.fit(X_train, y_train)
-
-    # Predict
+    # Evaluate model
     y_pred = model.predict(X_test)
     print(classification_report(y_test, y_pred))
 
     # Save model
+    os.makedirs("models", exist_ok=True)
+    joblib.dump(vectorizer, "models/vectorizer.pkl")
     joblib.dump(model, "models/ids_model_xgb.pkl")
-    print("XGBoost model trained and saved.")
-
-    # Save train/test data
-    os.makedirs("data/processed", exist_ok=True)
-    X_train.to_csv("data/processed/train.csv", index=False)
-    X_test.to_csv("data/processed/test.csv", index=False)
+    print("Vectorizer and XGBoost model saved successfully.")
 
 if __name__ == "__main__":
     main()
