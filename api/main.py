@@ -1,8 +1,3 @@
-"""
-ML-Based Intrusion Detection System - FastAPI Deployment
-Real-time detection of XSS, SQL Injection, and Phishing attacks
-"""
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,14 +6,13 @@ import os
 import json
 import joblib
 
-# Initialize FastAPI
 app = FastAPI(
     title="ML-Based Intrusion Detection System",
     description="Real-time detection of XSS, SQLi, and Phishing attacks",
     version="1.0.0"
 )
 
-# Add CORS middleware
+# Add middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -27,9 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# variables and mapping labels
 model = None
 vectorizer = None
-label_names = {
+LABEL_MAP = {
     0: "Benign",
     1: "XSS",
     2: "SQLi",
@@ -37,14 +32,11 @@ label_names = {
 }
 
 # Logs directory
-os.makedirs('logs', exist_ok=True)
-LOG_FILE = 'logs/ids_logs.json'
+os.makedirs("logs", exist_ok=True)
+LOG_FILE = "logs/ids_logs.json"
 
-# Load models function
 def load_models():
-    """Load trained model and vectorizer (robust paths using joblib)"""
     global model, vectorizer
-
     try:
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         MODEL_DIR = os.path.join(BASE_DIR, "..", "models")
@@ -52,28 +44,19 @@ def load_models():
         vectorizer_path = os.path.join(MODEL_DIR, "vectorizer.pkl")
         model_path = os.path.join(MODEL_DIR, "ids_model_xgb.pkl")
 
-        print("Loading vectorizer from:", vectorizer_path)
-        print("Loading model from:", model_path)
-
         vectorizer = joblib.load(vectorizer_path)
         model = joblib.load(model_path)
-
         print("✓ Models loaded successfully")
         return True
 
     except FileNotFoundError as e:
         print("✗ File not found:", e)
         return False
-
     except Exception as e:
         print("✗ Unexpected error:", e)
         return False
 
-# ---------------------------
-# 4️⃣ Log detection
-# ---------------------------
 def log_detection(payload: str, prediction: str, confidence: float, severity: str):
-    """Log detected attacks to JSON file"""
     log_entry = {
         "timestamp": datetime.now().isoformat(),
         "payload": payload,
@@ -81,45 +64,29 @@ def log_detection(payload: str, prediction: str, confidence: float, severity: st
         "confidence": float(confidence),
         "severity": severity
     }
-
-    # Load existing logs
     logs = []
     if os.path.exists(LOG_FILE):
         try:
-            with open(LOG_FILE, 'r') as f:
+            with open(LOG_FILE, "r") as f:
                 logs = json.load(f)
         except json.JSONDecodeError:
             logs = []
-
-    # Append new log and keep last 1000
     logs.append(log_entry)
-    logs = logs[-1000:]
+    logs = logs[-1000:]  # keep last 1000 logs
 
-    # Save
-    with open(LOG_FILE, 'w') as f:
+    with open(LOG_FILE, "w") as f:
         json.dump(logs, f, indent=2)
 
-# ---------------------------
-# 5️⃣ Startup event
-# ---------------------------
+# Starting an event
 @app.on_event("startup")
 async def startup_event():
     success = load_models()
     if not success:
         print("WARNING: Models not loaded. /predict endpoint will not work.")
 
-# ---------------------------
-# 6️⃣ Request/Response Models
-
+# Request/Response 
 class PredictionRequest(BaseModel):
     payload: str
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "payload": "<script>alert('XSS')</script>"
-            }
-        }
 
 class PredictionResponse(BaseModel):
     payload: str
@@ -136,9 +103,7 @@ class HealthResponse(BaseModel):
     vectorizer_loaded: bool
     timestamp: str
 
-# ---------------------------
-# 7️⃣ Root & Health endpoints
-# ---------------------------
+# Endpoints
 @app.get("/", tags=["Root"])
 async def root():
     return {
@@ -151,7 +116,6 @@ async def root():
             "docs": "/docs"
         }
     }
-
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
 async def health_check():
     return {
@@ -160,50 +124,30 @@ async def health_check():
         "vectorizer_loaded": vectorizer is not None,
         "timestamp": datetime.now().isoformat()
     }
-
-# ---------------------------
-# 8️⃣ Prediction endpoint
-# ---------------------------
 @app.post("/predict", response_model=PredictionResponse, tags=["Prediction"])
 async def predict_attack(request: PredictionRequest):
     if model is None or vectorizer is None:
         raise HTTPException(
             status_code=503,
-            detail="Models not loaded. Please ensure train_model.py has been run."
+            detail="Models not loaded. Please train the model first."
         )
-
-    if not request.payload or not request.payload.strip():
+    if not request.payload.strip():
         raise HTTPException(status_code=400, detail="Payload cannot be empty")
 
     try:
-        # Preprocess payload
         cleaned_payload = request.payload.lower().strip()
         X = vectorizer.transform([cleaned_payload])
-
-        # Predict
-        prediction = model.predict(X)[0]
+        prediction_idx = model.predict(X)[0]
         probabilities = model.predict_proba(X)[0]
-
-        predicted_class = label_names.get(prediction, f"Class_{prediction}")
-        confidence = float(probabilities[prediction])
-
-        # ---------------------------
-        # ✅ Corrected Severity Logic
-        # ---------------------------
+        predicted_class = LABEL_MAP.get(prediction_idx, f"Class_{prediction_idx}")
+        confidence = float(probabilities[prediction_idx])
         if predicted_class == "Benign":
             severity = "low"
         elif confidence < 0.8:
             severity = "medium"
         else:
             severity = "high"
-
-        # Probabilities dict
-        all_probs = {
-            label_names.get(i, f"Class_{i}"): float(prob) 
-            for i, prob in enumerate(probabilities)
-        }
-
-        # Log attacks (skip benign)
+        all_probs = {LABEL_MAP.get(i, f"Class_{i}"): float(prob) for i, prob in enumerate(probabilities)}
         if predicted_class != "Benign":
             log_detection(
                 payload=request.payload,
@@ -211,7 +155,6 @@ async def predict_attack(request: PredictionRequest):
                 confidence=confidence,
                 severity=severity
             )
-
         return {
             "payload": request.payload,
             "prediction": predicted_class,
@@ -220,23 +163,18 @@ async def predict_attack(request: PredictionRequest):
             "severity": severity,
             "timestamp": datetime.now().isoformat(),
             "message": f"Detected {predicted_class} attack with {confidence*100:.2f}% confidence"
-                    if predicted_class != "Benign"
-                    else "No malicious activity detected"
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
-# ---------------------------
-# 9️⃣ Logs endpoints
-# ---------------------------
 @app.get("/logs", tags=["Logs"])
 async def get_logs(limit: int = 50):
     if not os.path.exists(LOG_FILE):
         return {"logs": [], "count": 0}
 
     try:
-        with open(LOG_FILE, 'r') as f:
+        with open(LOG_FILE, "r") as f:
             logs = json.load(f)
         limit = min(limit, 1000)
         recent_logs = logs[-limit:]
@@ -253,12 +191,11 @@ async def clear_logs():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error clearing logs: {str(e)}")
 
-# ---------------------------
-# 10️⃣ Run API
-# ---------------------------
+
+# Run API
 if __name__ == "__main__":
     import uvicorn
-    print("=" * 70)
+    print("="*70)
     print("Starting ML-Based Intrusion Detection System API")
-    print("=" * 70)
+    print("="*70)
     uvicorn.run(app, host="0.0.0.0", port=8000)
