@@ -10,7 +10,11 @@ def main():
     # ---------------------------
     # 1️⃣ Load Dataset
     # ---------------------------
-    df = pd.read_csv("data/processed/full_dataset.csv")
+    df = pd.read_csv(
+    "data/processed/full_dataset.csv",
+    engine="python",
+    on_bad_lines="skip"
+)
     X_text = df["payload"].astype(str)
     y = df["label"].astype(int)
 
