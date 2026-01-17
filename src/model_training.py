@@ -7,9 +7,6 @@ import joblib
 import os
 
 def main():
-    # ---------------------------
-    # 1️⃣ Load Dataset
-    # ---------------------------
     df = pd.read_csv(
     "data/processed/full_dataset.csv",
     engine="python",
@@ -18,12 +15,6 @@ def main():
     X_text = df["payload"].astype(str)
     y = df["label"].astype(int)
 
-    # Ensure labels start from 0
-    y = y - y.min()
-
-    # ---------------------------
-    # 2️⃣ Fit TF-IDF Vectorizer
-    # ---------------------------
     vectorizer = TfidfVectorizer(
         ngram_range=(1, 3),
         max_features=5000,  # fixed feature size
@@ -31,17 +22,11 @@ def main():
     )
 
     X_features = vectorizer.fit_transform(X_text)
-
-    # ---------------------------
-    # 3️⃣ Train/Test Split
-    # ---------------------------
+    
     X_train, X_test, y_train, y_test = train_test_split(
         X_features, y, test_size=0.2, random_state=42, stratify=y
     )
-
-    # ---------------------------
-    # 4️⃣ Train XGBoost Multi-Class
-    # ---------------------------
+   
     model = xgb.XGBClassifier(
         n_estimators=300,
         max_depth=6,
