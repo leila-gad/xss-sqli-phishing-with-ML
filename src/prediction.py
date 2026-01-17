@@ -1,31 +1,51 @@
-import pandas as pd
 import joblib
-from feature_extraction import extract_features  # Make sure this exists
 
-# Map numeric labels back to attack names
-LABELS = {
-    0: "XSS",
-    1: "SQL Injection",
-    2: "Phishing"
+# Consistent label mapping (SAME AS API & TRAINING)
+LABEL_MAP = {
+    0: "Benign",
+    1: "XSS",
+    2: "SQL Injection",
+    3: "Phishing"
 }
 
-# Load trained model
+# Load vectorizer and model
+vectorizer = joblib.load("models/vectorizer.pkl")
 model = joblib.load("models/ids_model_xgb.pkl")
 
-def predict(payload):
-    # Convert payload to features
-    features = extract_features(payload)
-    df = pd.DataFrame([features])
-    
-    # Predict label
-    pred_label = model.predict(df)[0]
-    
-    # Map to attack name
-    return LABELS[pred_label]
+def predict(payload: str):
+    if not payload.strip():
+        return "Invalid input"
+
+    # Clean payload (same as API)
+    payload = payload.lower().strip()
+
+    # Vectorize
+    X = vectorizer.transform([payload])
+
+    # Predict
+    pred_idx = model.predict(X)[0]
+    probs = model.predict_proba(X)[0]
+    prediction = LABEL_MAP[pred_idx]
+    confidence = probs[pred_idx]
+    return {
+        "payload": payload,
+        "prediction": prediction,
+        "confidence": round(float(confidence), 4),
+        "all_probabilities": {
+            LABEL_MAP[i]: round(float(p), 4)
+            for i, p in enumerate(probs)
+        }
+    }
 
 # Example usage
 if __name__ == "__main__":
-    test_payload = "<script>alert('XSS')</script>"
-    result = predict(test_payload)
-    print("Payload:", test_payload)
-    print("Predicted Attack:", result)
+    test_payloads = [
+        "hello world",
+        "<script>alert('XSS')</script>",
+        "' OR 1=1 --",
+        "http://paypal-login-secure.com"
+    ]
+    for p in test_payloads:
+        result = predict(p)
+        print("\nPayload:", p)
+        print("Result:", result)
