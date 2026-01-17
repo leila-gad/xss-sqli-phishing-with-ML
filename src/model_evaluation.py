@@ -2,54 +2,53 @@ import pandas as pd
 import joblib
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
-import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 
-# Label name mapping (supports both 0-based and 1-based labels)
 LABEL_MAP = {
-    0: "XSS",
-    1: "SQL Injection",
-    2: "Phishing",
+    0: "Benign",
     1: "XSS",
     2: "SQL Injection",
     3: "Phishing"
 }
 
+DATA_DIR = "data/processed"
+MODEL_DIR = "models"
+RESULTS_DIR = "results"
+
 def main():
     # Load test dataset
-    df_test = pd.read_csv("data/processed/test.csv")
-    df_test.rename(columns=lambda x: x.strip(), inplace=True)
+    df_test = pd.read_csv(f"{DATA_DIR}/test.csv")
 
-    if "label" not in df_test.columns:
-        raise ValueError("❌ 'label' column not found in test.csv")
+    if "payload" not in df_test.columns or "label" not in df_test.columns:
+        raise ValueError(" test.csv must contain 'payload' and 'label' columns")
 
-    # Separate features and labels
-    X_test = df_test.drop("label", axis=1)
+    X_text = df_test["payload"].astype(str)
     y_test = df_test["label"].astype(int)
 
-    # Load trained model
-    if not os.path.exists("models/ids_model_xgb.pkl"):
-        raise FileNotFoundError("❌ Trained model not found. Run model_training.py first.")
+    # Load model & vectorizer
+    model_path = f"{MODEL_DIR}/ids_model_xgb.pkl"
+    vectorizer_path = f"{MODEL_DIR}/vectorizer.pkl"
 
-    model = joblib.load("models/ids_model_xgb.pkl")
+    if not os.path.exists(model_path) or not os.path.exists(vectorizer_path):
+        raise FileNotFoundError(" Model or vectorizer not found. Train the model first.")
+        
+    model = joblib.load(model_path)
+    vectorizer = joblib.load(vectorizer_path)
+
+    # Vectorize test data (IMPORTANT)
+    X_test = vectorizer.transform(X_text)
 
     # Predict
     y_pred = model.predict(X_test)
+    print("DEBUG y_test unique:", sorted(y_test.unique()))
+    print("DEBUG y_pred unique:", sorted(set(y_pred)))
 
-    # ---- DEBUG INFO (keep this) ----
-    print("DEBUG y_test unique values:", sorted(y_test.unique()))
-    print("DEBUG y_pred unique values:", sorted(set(y_pred)))
-    print("DEBUG y_test dtype:", y_test.dtype)
-
-    # Determine actual labels present
+    # Labels present in test set
     labels = sorted(np.unique(y_test))
+    target_names = [LABEL_MAP[l] for l in labels]
 
-    # Build correct class names dynamically
-    target_names = [LABEL_MAP.get(l, f"Class {l}") for l in labels]
-
-    # ---- Classification Report ----
-    print("\n📊 Classification Report:\n")
+    print("\n Classification Report:\n")
     print(
         classification_report(
             y_test,
@@ -60,28 +59,24 @@ def main():
         )
     )
 
-    # ---- Confusion Matrix ----
     cm = confusion_matrix(y_test, y_pred, labels=labels)
-
     plt.figure(figsize=(6, 5))
-    sns.heatmap(
-        cm,
-        annot=True,
-        fmt="d",
-        xticklabels=target_names,
-        yticklabels=target_names,
-        cmap="Blues"
-    )
+    plt.imshow(cm)
+    plt.colorbar()
+    plt.xticks(range(len(target_names)), target_names, rotation=45)
+    plt.yticks(range(len(target_names)), target_names)
+    for i in range(len(labels)):
+        for j in range(len(labels)):
+            plt.text(j, i, cm[i, j], ha="center", va="center")
+
     plt.xlabel("Predicted")
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
-
-    os.makedirs("results", exist_ok=True)
-    plt.savefig("results/confusion_matrix.png")
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    plt.savefig(f"{RESULTS_DIR}/confusion_matrix.png")
     plt.show()
-
-    print("✅ Evaluation completed successfully.")
-    print("📁 Confusion matrix saved to results/confusion_matrix.png")
+    print(" Evaluation completed successfully.")
+    print(" Saved to results/confusion_matrix.png")
 
 if __name__ == "__main__":
     main()
