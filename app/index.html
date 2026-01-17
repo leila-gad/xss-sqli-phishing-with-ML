@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>IDS Dashboard</title>
+  <link rel="stylesheet" href="style.css"> <!-- relative path -->
+</head>
+<body>
+
+<h2>🔐 Intrusion Detection System Dashboard</h2>
+
+
+<section>
+  <h3> Analyze Payload</h3>
+
+  <textarea id="payload" placeholder="Enter payload / URL / input"></textarea><br>
+  <button onclick="analyze()">Analyze</button>
+
+  <div id="loading" class="loading hidden">
+    <span class="spinner"></span> Analyzing...
+  </div>
+
+  <div id="result" class="result hidden"></div>
+</section>
+
+<hr>
+
+<section>
+  <h3> Detection History</h3>
+  <button onclick="loadLogs()"> Refresh Logs</button>
+
+  <table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Payload</th>
+        <th>Prediction</th>
+        <th>Confidence</th>
+      </tr>
+    </thead>
+    <tbody id="logsTable"></tbody>
+  </table>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
