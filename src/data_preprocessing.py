@@ -1,49 +1,49 @@
 import pandas as pd
 import os
 
+# Paths
 RAW_DIR = "data/raw"
 PROCESSED_DIR = "data/processed"
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 
-def load_dataset(path, label=None):
-    df = pd.read_csv(path)
-    df = df[['payload', 'label']].dropna()
-    df['payload'] = df['payload'].astype(str).str.lower().str.strip()
+def load_and_process(file_path, attack_label):
+    df = pd.read_csv(file_path)
+    df = df[["payload", "label"]]
 
-    if label is not None:
-        df['label'] = label
-    else:
-        df['label'] = df['label'].astype(int)
+    # Keep only malicious samples (label == 1)
+    df = df[df["label"] == 1]
 
+    # Assign attack type
+    df["label"] = attack_label
     return df
 
-
 def main():
-    print(" Loading datasets...")
+    # Load attack datasets
+    xss_df = load_and_process(f"{RAW_DIR}/xss.csv", 1)       # XSS
+    sqli_df = load_and_process(f"{RAW_DIR}/sqli.csv", 2)    # SQLi
+    phishing_df = load_and_process(f"{RAW_DIR}/phishing.csv", 3)  # Phishing
 
-    # XSS: already binary (0 = benign, 1 = XSS)
-    xss = load_dataset(f"{RAW_DIR}/xss.csv")
-
-    # SQL Injection
-    sqli = load_dataset(f"{RAW_DIR}/sqli.csv", label=2)
-
-    # Phishing
-    phishing = load_dataset(f"{RAW_DIR}/phishing.csv", label=3)
+    # Optional benign samples
+    benign_df = pd.DataFrame({
+        "payload": [
+            "hello world",
+            "test message",
+            "this is a normal request",
+            "sample input text"
+        ],
+        "label": 0
+    })
 
     # Merge all
-    full_df = pd.concat([xss, sqli, phishing], ignore_index=True)
+    full_df = pd.concat([benign_df, xss_df, sqli_df, phishing_df], ignore_index=True)
 
-    # Shuffle dataset
-    full_df = full_df.sample(frac=1, random_state=42).reset_index(drop=True)
+    # Shuffle
+    full_df = full_df.sample(frac=1, random_state=42)
 
-    # Save final dataset
-    output_path = f"{PROCESSED_DIR}/full_dataset.csv"
-    full_df.to_csv(output_path, index=False)
-
-    print(" Dataset preprocessing completed")
-    print(" Saved to:", output_path)
-    print("\n Label distribution:")
-    print(full_df['label'].value_counts())
+    # Save
+    full_df.to_csv(f"{PROCESSED_DIR}/full_dataset.csv", index=False)
+    print(" Preprocessing completed.")
+    print(full_df["label"].value_counts())
 
 if __name__ == "__main__":
     main()
