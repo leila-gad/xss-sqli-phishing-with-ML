@@ -1,1 +1,58 @@
-
+[
+  {
+    "timestamp": "2026-01-17T16:49:33.726417",
+    "payload": "hello world",
+    "prediction": "Phishing",
+    "confidence": 0.6548230648040771,
+    "severity": "medium"
+  },
+  {
+    "timestamp": "2026-01-17T16:52:34.565410",
+    "payload": "\"http://paypal-login-secure.com\"",
+    "prediction": "Phishing",
+    "confidence": 0.4373008608818054,
+    "severity": "medium"
+  },
+  {
+    "timestamp": "2026-01-17T16:58:26.539951",
+    "payload": "\"http://paypal-login-secure.com\"",
+    "prediction": "Phishing",
+    "confidence": 0.4373008608818054,
+    "severity": "medium"
+  },
+  {
+    "timestamp": "2026-01-17T16:58:54.786429",
+    "payload": "\"<script>alert('XSS')</script>\"",
+    "prediction": "XSS",
+    "confidence": 0.9960222840309143,
+    "severity": "high"
+  },
+  {
+    "timestamp": "2026-01-17T18:01:35.763740",
+    "payload": "hi",
+    "prediction": "Phishing",
+    "confidence": 0.5027757883071899,
+    "severity": "medium"
+  },
+  {
+    "timestamp": "2026-01-18T11:43:31.154158",
+    "payload": "dino stephen cnysovmms13hinetnet dear d420608af3e0cf569f66673522ea830b summer exact time take week work think health personal life glad assist till 30th october use particular proposal visit site details answerdrycom 6 aug 2008 125214 wed 06 aug 2008 111048 0000 benefit world know male enhancing products",
+    "prediction": "Phishing",
+    "confidence": 0.9962117671966553,
+    "severity": "high"
+  },
+  {
+    "timestamp": "2026-01-18T11:46:21.970803",
+    "payload": "GET http://localhost:8080/tienda1/miembros/editar.jsp?modo=registro&login=moeschet&password=FAstiD%3FIoso&nombre=VahidReza&apellidos=Toral+Pine&email=uray%40hosterialasmajadillas.pt&dni=79928493C&direccion=Dido+162%2C+&ciudad=Aldeanueva+de+Ebro&cp=50001%22%3E%3C%21--%23EXEC+cmd%3D%22dir+%22--%3E%3C&provincia=Madrid&ntc=6010532265403807&B1=Registrar HTTP/1.1",
+    "prediction": "SQL Injection",
+    "confidence": 0.9992380142211914,
+    "severity": "high"
+  },
+  {
+    "timestamp": "2026-01-18T11:47:53.871411",
+    "payload": "http://www.instructables.com/account/register?nxtpgname=%22/%3e&lt;script<br>src=http://ha.ckers.org/xss.js?/&gt;&amp;nxtpg=/tag/type:id/",
+    "prediction": "XSS",
+    "confidence": 0.99994957447052,
+    "severity": "high"
+  }
+]

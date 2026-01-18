@@ -42,10 +42,11 @@ if __name__ == "__main__":
     test_payloads = [
         "hello world",
         "<script>alert('XSS')</script>",
-        "' OR 1=1 --",
+        "185.66.9.51/module/beb4c415691679a9f31263f0f0165ca7",
         "http://paypal-login-secure.com"
     ]
     for p in test_payloads:
         result = predict(p)
         print("\nPayload:", p)
         print("Result:", result)
+

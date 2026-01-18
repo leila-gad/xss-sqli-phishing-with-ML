@@ -22,13 +22,7 @@ app.add_middleware(
 
 model = None
 vectorizer = None
-LABEL_MAP = {
-    0: "Benign",
-    1: "XSS",
-    2: "SQL Injection",
-    3: "Phishing"
-}
-
+LABEL_MAP = {0: "Benign", 1: "XSS", 2: "SQL Injection", 3: "Phishing"}
 LOG_DIR = "logs"
 LOG_FILE = f"{LOG_DIR}/ids_logs.json"
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -75,18 +69,13 @@ def log_detection(payload, prediction, confidence, severity):
             logs = []
 
     logs.append(entry)
-    logs = logs[-1000:]
-
+    logs = logs[-1000:]  # Keep last 1000 logs
     with open(LOG_FILE, "w") as f:
         json.dump(logs, f, indent=2)
 
 @app.get("/")
 def root():
-    return {
-        "message": "ML-Based IDS API is running",
-        "docs": "/docs",
-        "health": "/health"
-    }
+    return {"message": "ML-Based IDS API is running", "docs": "/docs", "health": "/health"}
 
 @app.get("/health")
 def health():
@@ -104,25 +93,14 @@ def predict(request: PredictionRequest):
     if not request.payload.strip():
         raise HTTPException(status_code=400, detail="Payload cannot be empty")
 
-    # Clean payload (MUST MATCH predict.py)
-    payload = request.payload.lower().strip()
-
-    # Vectorize
+    payload = request.payload.strip()  
     X = vectorizer.transform([payload])
-
-    # Predict
     pred_idx = int(model.predict(X)[0])
     probs = model.predict_proba(X)[0]
-
     prediction = LABEL_MAP[pred_idx]
     confidence = float(probs[pred_idx])
+    probabilities = {LABEL_MAP[i]: round(float(p), 4) for i, p in enumerate(probs)}
 
-    probabilities = {
-        LABEL_MAP[i]: round(float(p), 4)
-        for i, p in enumerate(probs)
-    }
-
-    # Severity logic
     if prediction == "Benign":
         severity = "low"
     elif confidence < 0.8:
@@ -130,7 +108,6 @@ def predict(request: PredictionRequest):
     else:
         severity = "high"
 
-    # Log only attacks
     if prediction != "Benign":
         log_detection(payload, prediction, confidence, severity)
 
@@ -147,14 +124,9 @@ def predict(request: PredictionRequest):
 def get_logs(limit: int = 50):
     if not os.path.exists(LOG_FILE):
         return {"count": 0, "logs": []}
-
     with open(LOG_FILE, "r") as f:
         logs = json.load(f)
-
-    return {
-        "count": min(limit, len(logs)),
-        "logs": logs[-limit:][::-1]
-    }
+    return {"count": min(limit, len(logs)), "logs": logs[-limit:][::-1]}
 
 @app.delete("/logs")
 def clear_logs():

@@ -53,7 +53,7 @@ Installation and running:
         source venv/bin/activate
 
         /Install dependencies
-        pip install -r requirements.txt
+        pip install -r requirement.txt
 
         /Run the API
         cd app
@@ -63,8 +63,6 @@ Installation and running:
         Open app/index.html in your browser or run a local server.
         it can open at something like http://127.0.0.1:5500
         
-
-        You can now test the dashboard:) type a payload → see prediction and logs
 
 
 

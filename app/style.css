@@ -1,4 +1,4 @@
-
+/* Basic body styling */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #f5f6fa;
@@ -7,160 +7,109 @@ body {
   margin: 0;
 }
 
+/* Headings */
 h2 {
   text-align: center;
   color: #2f3640;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
-
 h3 {
   color: #40739e;
   margin-bottom: 10px;
 }
 
+/* Section styling */
 section {
-  background: #ffffff;
-  padding: 20px 25px;
-  margin-bottom: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  background: #fff;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
+/* Textarea & button */
 textarea {
   width: 100%;
-  max-width: 500px;
-  height: 120px;
-  padding: 12px;
-  border-radius: 8px;
+  height: 100px;
+  padding: 8px;
+  border-radius: 6px;
   border: 1px solid #ccc;
   resize: none;
   font-size: 1rem;
 }
-
 button {
-  background-color: #40739e;
-  color: white;
+  background: #40739e;
+  color: #fff;
   border: none;
-  padding: 10px 20px;
-  margin-top: 10px;
-  border-radius: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
-  transition: 0.3s;
+  margin-top: 8px;
 }
-
 button:hover {
-  background-color: #2f3640;
+  background: #2f3640;
 }
 
+/* Loading spinner */
 .loading {
-  color: #40739e;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
   margin-top: 10px;
-}
-
-.spinner {
-  border: 4px solid rgba(0,0,0,0.1);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border-left-color: #40739e;
-  animation: spin 1s linear infinite;
-  display: inline-block;
-  margin-right: 10px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.result {
-  margin-top: 20px;
-  padding: 15px 20px;
-  border-radius: 10px;
   font-weight: bold;
-  transition: all 0.3s;
-  font-size: 1rem;
+  color: #40739e;
+}
+.spinner {
+  border: 3px solid rgba(0,0,0,0.1);
+  border-left-color: #40739e;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Result box */
+.result {
+  margin-top: 15px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.95rem;
   display: inline-block;
 }
+.attack-benign { background: #dff9fb; color: #2f3640; border-left: 4px solid #44bd32; }
+.attack-xss { background: #fcdada; color: #e84118; border-left: 4px solid #e84118; }
+.attack-sqli { background: #ffeaa7; color: #e1b12c; border-left: 4px solid #e1b12c; }
+.attack-phishing { background: #f9f6d7; color: #fbc531; border-left: 4px solid #fbc531; }
 
-.attack-benign {
-  background-color: #dff9fb;
-  color: #2f3640;
-  border-left: 5px solid #44bd32;
-}
-
-.attack-xss {
-  background-color: #fcdada;
-  color: #e84118;
-  border-left: 5px solid #e84118;
-}
-
-.attack-sqli {
-  background-color: #ffeaa7;
-  color: #e1b12c;
-  border-left: 5px solid #e1b12c;
-}
-
-.attack-phishing {
-  background-color: #f9f6d7;
-  color: #fbc531;
-  border-left: 5px solid #fbc531;
-}
-
-.result p {
-  margin: 5px 0;
-}
-
-
+/* Table */
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 15px;
-  font-size: 0.95rem;
+  margin-top: 10px;
+  font-size: 0.9rem;
 }
-
 th, td {
-  padding: 10px 12px;
+  padding: 6px 8px;
   text-align: left;
 }
+th { background: #40739e; color: #fff; font-weight: bold; }
+tr:nth-child(even) { background: #f1f2f6; }
+tr:hover { background: #dcdde1; }
 
-th {
-  background-color: #40739e;
-  color: white;
-  font-weight: bold;
-}
-
-tr:nth-child(even) {
-  background-color: #f1f2f6;
-}
-
-tr:hover {
-  background-color: #dcdde1;
-}
-
+/* Responsive adjustments */
 @media (max-width: 600px) {
-  textarea {
-    width: 100%;
-    height: 100px;
-  }
-  button {
-    width: 100%;
-  }
-  section {
-    padding: 15px;
-  }
-  table th, table td {
-    font-size: 0.85rem;
-    padding: 8px;
-  }
+  textarea { height: 80px; }
+  button { width: 100%; }
+  section { padding: 10px; }
+  th, td { font-size: 0.8rem; padding: 6px; }
 }
 
+/* Error / success */
+.error { color: #e84118; }
+.success { color: #44bd32; }
 
-.error {
-  color: #e84118;
-}
-
-.success {
-  color: #44bd32;
-}
+/* Hidden helper */
+.hidden { display: none; }

@@ -8,14 +8,12 @@ import os
 DATA_DIR = "data/processed"
 MODEL_DIR = "models"
 os.makedirs(MODEL_DIR, exist_ok=True)
-
 LABEL_NAMES = ["Benign", "XSS", "SQLi", "Phishing"]
 
 def main():
     # Load train & test data
     train_df = pd.read_csv(f"{DATA_DIR}/train.csv")
     test_df = pd.read_csv(f"{DATA_DIR}/test.csv")
-
     X_train_text = train_df["payload"].astype(str)
     y_train = train_df["label"].astype(int)
     X_test_text = test_df["payload"].astype(str)
@@ -27,7 +25,6 @@ def main():
         max_features=5000,
         lowercase=True
     )
-
     X_train = vectorizer.fit_transform(X_train_text)
     X_test = vectorizer.transform(X_test_text)
 
